@@ -10,6 +10,19 @@ Send shared context and a set of questions. Simple Jev reads the model's next-to
 
 The current implementation runs locally with Hugging Face Transformers and PyTorch. Shared request validation, versioned prompt instructions, and response scoring live in the plain Python `common/` folder so other inference implementations can use the same rules.
 
+## TypeScript
+
+The engine-independent classifier contract is also available for Node.js and
+browser-compatible adapters in [`typescript/`](typescript/). It ports request
+validation, the language-independent v1 prompt builder, and logits-to-response
+scoring without requiring a model runtime:
+
+```bash
+cd typescript
+npm install
+npm test
+```
+
 ## Try it today
 
 Try the [public demo API](https://simple-jev-demo-api.featherless.ai/v1/) with **no login, API key, or authentication required**. The demo has a **2k-token context limit** and is **rate limited to 2 requests per second (2 RPS)**.
