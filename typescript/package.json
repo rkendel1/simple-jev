@@ -1,0 +1,13 @@
+{
+  "name": "simple-jev",
+  "version": "0.1.0",
+  "description": "TypeScript implementation of the Simple Jev shared classifier contract",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test dist/tests/*.test.js"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
