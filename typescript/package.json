@@ -8,6 +8,7 @@
     "test": "npm run build && node --test dist/tests/*.test.js"
   },
   "devDependencies": {
+    "@types/node": "^22.13.10",
     "typescript": "^5.8.3"
   }
 }

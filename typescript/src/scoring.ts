@@ -18,7 +18,8 @@ function row(question: ScoringQuestion, value: Record<string, number> | readonly
   }
   if (Object.keys(value).length !== question.output_labels.length ||
       question.output_labels.some(label => !(label in value))) throw new Error(`Unexpected or missing output labels for branch ${question.branch_id}`);
-  return question.output_labels.map(label => value[label] as number);
+  const map = value as Record<string, number>;
+  return question.output_labels.map(label => map[label]!);
 }
 
 export function buildAnswers(plan: PromptPlan, logits: Logits, advanced = false): Record<string, Answer> {
@@ -30,25 +31,32 @@ export function buildAnswers(plan: PromptPlan, logits: Logits, advanced = false)
     const probabilities = softmax(values);
     const labels = question.answer_labels;
     const winner = values.reduce((best, value, index) => value > values[best]! ? index : best, 0);
-    if (plan.request.questions[question.question_id]!.type === "noul") {
+    const sourceQuestion = plan.request.questions[question.question_id]!;
+    if (sourceQuestion.type === "noul") {
       const mean = probabilities.reduce((sum, p, i) => sum + p * (i + 1), 0);
       const answer: Answer = { type: "noul", noul: Math.min(.99, Math.max(.01, .01 + (mean / 10 - .1) * (.98 / .8))) };
-      if (advanced) Object.assign(answer, { calibrated: false, rating: { bins: [1,2,3,4,5,6,7,8,9], probabilities, expected_score: mean } });
+      if (advanced) {
+        Object.assign(answer, { calibrated: false, rating: { bins: [1,2,3,4,5,6,7,8,9], probabilities, expected_score: mean } });
+        if (plan.request.options.raw_logits) (answer.rating as Record<string, unknown>).logits = values;
+      }
       answers[question.question_id] = answer;
     } else {
       const answer: Answer = {
-        type: plan.request.questions[question.question_id]!.type,
+        type: sourceQuestion.type,
         confidence: probabilities[winner],
         probabilities: Object.fromEntries(labels.map((label, i) => [label, probabilities[i]]))
       };
-      if (question.answer_labels.length && plan.request.questions[question.question_id]!.type === "choice")
+      if (sourceQuestion.type === "choice")
         answer.choice = labels[winner];
       else {
         const mean = probabilities.reduce((sum, p, i) => sum + p * i, 0);
         answer.score = mean;
-        answer.legend = Object.fromEntries(labels.map((_, i) => [String(i), plan.request.questions[question.question_id]!.criteria[i]]));
+        answer.legend = Object.fromEntries(labels.map((_, i) => [String(i), (sourceQuestion as { criteria: unknown[] }).criteria[i]]));
       }
-      if (advanced) Object.assign(answer, { calibrated: false, logits: Object.fromEntries(labels.map((label, i) => [label, values[i]])) });
+      if (advanced) {
+        Object.assign(answer, { calibrated: false });
+        if (plan.request.options.raw_logits) answer.logits = Object.fromEntries(labels.map((label, i) => [label, values[i]]));
+      }
       answers[question.question_id] = answer;
     }
   }

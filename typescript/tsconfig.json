@@ -8,7 +8,7 @@
     "strict": true,
     "declaration": true,
     "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
+    "exactOptionalPropertyTypes": false,
     "skipLibCheck": true
   },
   "include": ["src", "tests"]
